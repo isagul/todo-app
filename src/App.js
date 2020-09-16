@@ -2,7 +2,7 @@ import React, { useContext, useState } from 'react';
 import { Input, Checkbox, Divider, Popconfirm } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import { Store } from './store';
-import { ADD_TASK, UPDATE_STATUS, GET_FILTER_TASKS, DELETE_TASK } from './constants/actions';
+import { ADD_TASK, UPDATE_STATUS, GET_FILTER_TASKS, DELETE_TASK } from './actions/index';
 import './App.scss';
 
 const taskStatus = [
@@ -80,6 +80,7 @@ function App() {
           </ul>
         </div>
         <div className="add-list-area">
+          <Divider>TODO APP</Divider>
           <Input
             className="add-bar"
             placeholder="Add task"
@@ -99,7 +100,7 @@ function App() {
                     </li>
                     <span className="delete-task">
                       <Popconfirm title="Are you sure？" icon={<QuestionCircleOutlined style={{ color: 'red' }} />} onConfirm={() => deleteTask(item)}>
-                        Sil
+                        Delete
                       </Popconfirm>
                     </span>
                   </div>
@@ -107,7 +108,7 @@ function App() {
               }) : <span>There is no any saved tasks here.</span>
             }
           </ul>
-          {/* <span>{state.tasks.filter(task => task.status === 'active').length} items left</span> */}
+          <span className="left-items-info"><strong>{state.tasks.filter(task => task.status === 'active').length}</strong> items left</span>
         </div>
       </div>
     </div>

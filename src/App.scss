@@ -1,27 +1,31 @@
 $logoColor: #5D3EBD;
 
 .app-component {
-    padding: 1rem;
     .content {
-        display:flex;
+        display: flex;
         flex-direction: row;
+
         .status-area {
             flex: 1;
-            background-color: #fafafa;
+            background-color: #eaeaea;
             display: flex;
             flex-direction: column;
-            height: max-content;
+            height: 100vh;
+
             .status-list {
                 list-style-type: none;
                 padding-left: 1rem;
                 margin-bottom: 0;
-                > div {
+
+                >div {
                     height: 50px;
                     display: flex;
                     align-items: center;
                 }
+
                 li {
                     transition: margin-left .2s ease;
+
                     &:hover {
                         cursor: pointer;
                         margin-left: 3px;
@@ -40,9 +44,12 @@ $logoColor: #5D3EBD;
             display: flex;
             flex-direction: column;
             padding-left: 1rem;
-            // justify-content: space-between;
+            background-color: #fafafa;
+
             .add-bar {
                 width: 50%;
+                align-self: center;
+
                 button {
                     background: $logoColor;
                     border-color: $logoColor;
@@ -53,11 +60,13 @@ $logoColor: #5D3EBD;
                 list-style-type: none;
                 padding-left: 0;
                 margin-bottom: 0;
+
                 .task {
                     display: flex;
                     border-bottom: 1px solid lightgray;
                     padding-bottom: 1rem;
                     margin-top: 1rem;
+
                     /* &:hover {
                         .delete-task {
                             visibility: visible;
@@ -68,8 +77,9 @@ $logoColor: #5D3EBD;
                         color: #ff5858;
                         font-weight: 600;
                         // visibility: hidden;
-                    }   
+                    }
                 }
+
                 .completed {
                     span {
                         text-decoration-line: line-through;
@@ -78,16 +88,41 @@ $logoColor: #5D3EBD;
                     }
                 }
             }
+
+            .left-items-info {
+                margin-top: 3px;
+            }
         }
     }
 }
 
-.ant-input:focus, .ant-input-focused, .ant-input:hover {
-    border-color: $logoColor !important; 
-    box-shadow: none !important; 
+.ant-input:focus,
+.ant-input-focused,
+.ant-input:hover {
+    border-color: $logoColor !important;
+    box-shadow: none !important;
 }
 
 .ant-checkbox-checked .ant-checkbox-inner {
     background: $logoColor !important;
     border-color: $logoColor !important;
+}
+
+@media screen and (max-width: 600px) {
+    .app-component {
+        .content {
+            flex-direction: column;
+
+            .status-area {
+                margin-bottom: 1rem;
+            }
+
+            .add-list-area {
+                .add-bar {
+                    width: 100%;
+                }
+            }
+        }
+    }
+
 }

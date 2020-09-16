@@ -1,5 +1,5 @@
 import React from 'react';
-import { ADD_TASK, UPDATE_STATUS, GET_FILTER_TASKS, DELETE_TASK } from './constants/actions';
+import { ADD_TASK, UPDATE_STATUS, GET_FILTER_TASKS, DELETE_TASK } from './actions/index';
 
 export const Store = React.createContext();
 
