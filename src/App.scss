@@ -43,7 +43,7 @@ $logoColor: #5D3EBD;
             flex: 3;
             display: flex;
             flex-direction: column;
-            padding-left: 1rem;
+            padding: 0 1rem;
             background-color: #fafafa;
 
             .add-bar {
@@ -66,17 +66,19 @@ $logoColor: #5D3EBD;
                     border-bottom: 1px solid lightgray;
                     padding-bottom: 1rem;
                     margin-top: 1rem;
-
-                    /* &:hover {
-                        .delete-task {
-                            visibility: visible;
-                        }
-                    } */
+                    justify-content: space-between;
+                    
+                    .task-name {
+                        flex: 3;
+                    };
                     .delete-task {
                         cursor: pointer;
                         color: #ff5858;
                         font-weight: 600;
-                        // visibility: hidden;
+                        flex: 1;
+                    }
+                    .task-date {
+                        flex: 1;
                     }
                 }
 
@@ -91,6 +93,10 @@ $logoColor: #5D3EBD;
 
             .left-items-info {
                 margin-top: 3px;
+            }
+
+            .list-by-date {
+                align-self: flex-end;
             }
         }
     }
@@ -115,6 +121,7 @@ $logoColor: #5D3EBD;
 
             .status-area {
                 margin-bottom: 1rem;
+                height: min-content;
             }
 
             .add-list-area {

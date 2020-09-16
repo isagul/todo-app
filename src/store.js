@@ -1,11 +1,11 @@
 import React from 'react';
-import { ADD_TASK, UPDATE_STATUS, GET_FILTER_TASKS, DELETE_TASK } from './actions/index';
+import { ADD_TASK, UPDATE_STATUS, GET_FILTER_TASKS, DELETE_TASK, SORT_BY_DATE } from './actions/index';
 
 export const Store = React.createContext();
 
 const initialState = {
     tasks: [
-        {
+        /* {
             id: 1,
             content: 'task 1',
             status: 'active'
@@ -19,10 +19,10 @@ const initialState = {
             id: 3,
             content: 'task 3',
             status: 'active'
-        },
+        }, */
     ],
     filteredTasks: [
-        {
+        /* {
             id: 1,
             content: 'task 1',
             status: 'active'
@@ -36,7 +36,7 @@ const initialState = {
             id: 3,
             content: 'task 3',
             status: 'active'
-        },
+        }, */
     ]
 };
 
@@ -58,7 +58,7 @@ function reducer(state, action) {
                 filteredTasks: [...updatedTasks]
             }
         }
-                  
+
         case UPDATE_STATUS: {
             const { currentStatusFilter, task } = action.payload;
             const updatedTasks = state.tasks.map(item => {
@@ -83,7 +83,7 @@ function reducer(state, action) {
                 filteredTasks: [...updatedTasks]
             }
         }
-            
+
         case GET_FILTER_TASKS: {
             if (action.payload.key === 'all') {
                 return {
@@ -98,7 +98,7 @@ function reducer(state, action) {
                 }
             }
         }
-            
+
         case DELETE_TASK: {
             const { task, currentStatusFilter } = action.payload
             const idx = state.tasks.findIndex(item => item.id === task.id);
@@ -114,6 +114,22 @@ function reducer(state, action) {
                 ...state,
                 filteredTasks: [...updatedTasks]
             }
+        }
+        case SORT_BY_DATE: {
+            const {currentStatusFilter, sortValue} = action.payload;
+            const updatedTasks = state.tasks.sort(function(a,b){
+                return sortValue === 'desc' ? new Date(b.date) - new Date(a.date) : new Date(a.date) - new Date(b.date);
+            }).filter(task => {
+                if (currentStatusFilter === 'all') {
+                    return task;
+                } else {
+                    return task.status === currentStatusFilter;
+                }
+            });
+            return {
+                ...state,
+                filteredTasks: [...updatedTasks]
+            } 
         }
         default:
             return state;
