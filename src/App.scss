@@ -1,0 +1,93 @@
+$logoColor: #5D3EBD;
+
+.app-component {
+    padding: 1rem;
+    .content {
+        display:flex;
+        flex-direction: row;
+        .status-area {
+            flex: 1;
+            background-color: #fafafa;
+            display: flex;
+            flex-direction: column;
+            height: max-content;
+            .status-list {
+                list-style-type: none;
+                padding-left: 1rem;
+                margin-bottom: 0;
+                > div {
+                    height: 50px;
+                    display: flex;
+                    align-items: center;
+                }
+                li {
+                    transition: margin-left .2s ease;
+                    &:hover {
+                        cursor: pointer;
+                        margin-left: 3px;
+                    }
+                }
+
+                .active {
+                    font-weight: 600;
+                    color: $logoColor;
+                }
+            }
+        }
+
+        .add-list-area {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            padding-left: 1rem;
+            // justify-content: space-between;
+            .add-bar {
+                width: 50%;
+                button {
+                    background: $logoColor;
+                    border-color: $logoColor;
+                }
+            }
+
+            .list-tasks {
+                list-style-type: none;
+                padding-left: 0;
+                margin-bottom: 0;
+                .task {
+                    display: flex;
+                    border-bottom: 1px solid lightgray;
+                    padding-bottom: 1rem;
+                    margin-top: 1rem;
+                    /* &:hover {
+                        .delete-task {
+                            visibility: visible;
+                        }
+                    } */
+                    .delete-task {
+                        cursor: pointer;
+                        color: #ff5858;
+                        font-weight: 600;
+                        // visibility: hidden;
+                    }   
+                }
+                .completed {
+                    span {
+                        text-decoration-line: line-through;
+                        text-decoration-color: $logoColor;
+                        color: grey;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.ant-input:focus, .ant-input-focused, .ant-input:hover {
+    border-color: $logoColor !important; 
+    box-shadow: none !important; 
+}
+
+.ant-checkbox-checked .ant-checkbox-inner {
+    background: $logoColor !important;
+    border-color: $logoColor !important;
+}
