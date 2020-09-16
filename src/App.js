@@ -21,8 +21,9 @@ function App() {
     dispatch({
       type: UPDATE_STATUS,
       payload: {
-        id: item.id,
-        value: e.target.checked
+        task: item,
+        value: e.target.checked,
+        currentStatusFilter: currentFilter
       }
     });
   }
@@ -36,25 +37,29 @@ function App() {
   }
 
   function addTask() {
-    const task = {
+    const newTask = {
       id: '_' + Math.random().toString(36).substr(2, 9),
       status: 'active',
       content: taskName
     }
     dispatch({
       type: ADD_TASK,
-      payload: task
+      payload: {
+        task: newTask,
+        currentStatusFilter: currentFilter
+      }
     });
     setTaskName('');
-    setCurrentFilter('all');
   }
 
-  function deleteTask(task) {
+  function deleteTask(item) {
     dispatch({
       type: DELETE_TASK,
-      payload: task.id
+      payload: {
+        task: item,
+        currentStatusFilter: currentFilter
+      }
     });
-    setCurrentFilter('all');
   }
 
   return (
@@ -102,6 +107,7 @@ function App() {
               }) : <span>There is no any saved tasks here.</span>
             }
           </ul>
+          {/* <span>{state.tasks.filter(task => task.status === 'active').length} items left</span> */}
         </div>
       </div>
     </div>

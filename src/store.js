@@ -41,45 +41,83 @@ const initialState = {
 };
 
 function reducer(state, action) {
-    switch (action.type) {      
-        case ADD_TASK:
-            return {...state, tasks: [...state.tasks, action.payload], filteredTasks: [...state.filteredTasks, action.payload]}        
-        case UPDATE_STATUS:
-            const task = state.tasks.find(task => task.id === action.payload.id);
-            if (action.payload.value) {
-                task.status = 'completed';
-            } else {
-                task.status = 'active';
-            }
+    switch (action.type) {
+        case ADD_TASK: {
+            const { currentStatusFilter, task } = action.payload;
+            state.tasks.push(task);
+            state.filteredTasks.push(task);
+            const updatedTasks = state.tasks.filter(task => {
+                if (currentStatusFilter === 'all') {
+                    return task;
+                } else {
+                    return task.status === currentStatusFilter;
+                }
+            });
             return {
-                ...state, 
-                filteredTasks: [...state.tasks]
+                ...state,
+                filteredTasks: [...updatedTasks]
             }
-        case GET_FILTER_TASKS: 
+        }
+                  
+        case UPDATE_STATUS: {
+            const { currentStatusFilter, task } = action.payload;
+            const updatedTasks = state.tasks.map(item => {
+                if (item.id === task.id) {
+                    if (action.payload.value) {
+                        item.status = 'completed';
+                    } else {
+                        item.status = 'active';
+                    }
+                    return item;
+                }
+                return item;
+            }).filter(task => {
+                if (currentStatusFilter === 'all') {
+                    return task;
+                } else {
+                    return task.status === currentStatusFilter;
+                }
+            });
+            return {
+                ...state,
+                filteredTasks: [...updatedTasks]
+            }
+        }
+            
+        case GET_FILTER_TASKS: {
             if (action.payload.key === 'all') {
                 return {
-                    ...state, 
+                    ...state,
                     filteredTasks: [...state.tasks]
-                } 
+                }
             } else {
                 const updatedTasks = state.tasks.filter(task => task.status === action.payload.key);
                 return {
-                    ...state, 
+                    ...state,
                     filteredTasks: [...updatedTasks]
-                } 
+                }
             }
+        }
+            
         case DELETE_TASK: {
-            // const updatedTasks = [...state.tasks];
-            const idx = state.tasks.findIndex(task => task.id === action.payload);
+            const { task, currentStatusFilter } = action.payload
+            const idx = state.tasks.findIndex(item => item.id === task.id);
             state.tasks.splice(idx, 1);
+            const updatedTasks = state.tasks.filter(task => {
+                if (currentStatusFilter === 'all') {
+                    return task;
+                } else {
+                    return task.status === currentStatusFilter;
+                }
+            });
             return {
-                ...state, 
-                filteredTasks: [...state.tasks]
-            } 
+                ...state,
+                filteredTasks: [...updatedTasks]
+            }
         }
         default:
-          return state;
-      }
+            return state;
+    }
 }
 
 export function StoreProvider(props) {
