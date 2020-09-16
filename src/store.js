@@ -1,43 +1,12 @@
 import React from 'react';
-import { ADD_TASK, UPDATE_STATUS, GET_FILTER_TASKS, DELETE_TASK, SORT_BY_DATE } from './actions/index';
+import { ADD_TASK, UPDATE_STATUS, GET_FILTER_TASKS, DELETE_TASK, SORT_BY_DATE, UNDO_TASK } from './actions/index';
 
 export const Store = React.createContext();
 
 const initialState = {
-    tasks: [
-        /* {
-            id: 1,
-            content: 'task 1',
-            status: 'active'
-        },
-        {
-            id: 2,
-            content: 'task 2',
-            status: 'active'
-        },
-        {
-            id: 3,
-            content: 'task 3',
-            status: 'active'
-        }, */
-    ],
-    filteredTasks: [
-        /* {
-            id: 1,
-            content: 'task 1',
-            status: 'active'
-        },
-        {
-            id: 2,
-            content: 'task 2',
-            status: 'active'
-        },
-        {
-            id: 3,
-            content: 'task 3',
-            status: 'active'
-        }, */
-    ]
+    tasks: [],
+    filteredTasks: [],
+    recentlyDeleted: []
 };
 
 function reducer(state, action) {
@@ -90,6 +59,11 @@ function reducer(state, action) {
                     ...state,
                     filteredTasks: [...state.tasks]
                 }
+            } else if (action.payload.key === 'recently_deleted'){
+                return {
+                    ...state,
+                    filteredTasks: [...state.recentlyDeleted]
+                }
             } else {
                 const updatedTasks = state.tasks.filter(task => task.status === action.payload.key);
                 return {
@@ -102,7 +76,8 @@ function reducer(state, action) {
         case DELETE_TASK: {
             const { task, currentStatusFilter } = action.payload
             const idx = state.tasks.findIndex(item => item.id === task.id);
-            state.tasks.splice(idx, 1);
+            const deletedTask = state.tasks.splice(idx, 1);
+            state.recentlyDeleted = [...state.recentlyDeleted, ...deletedTask];
             const updatedTasks = state.tasks.filter(task => {
                 if (currentStatusFilter === 'all') {
                     return task;
@@ -129,6 +104,17 @@ function reducer(state, action) {
             return {
                 ...state,
                 filteredTasks: [...updatedTasks]
+            } 
+        }
+        case UNDO_TASK: {
+            const {id} = action.payload;
+            const idx = state.recentlyDeleted.findIndex(task => task.id === id);
+            const undoTask = state.recentlyDeleted.splice(idx, 1);
+            state.tasks = [...state.tasks, ...undoTask]; 
+            return {
+                ...state,
+                tasks: [...state.tasks],
+                filteredTasks: [...state.recentlyDeleted]
             } 
         }
         default:

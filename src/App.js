@@ -1,17 +1,26 @@
 import React, { useContext, useState } from 'react';
 import { Input, Checkbox, Divider, Popconfirm, Select } from 'antd';
-import { QuestionCircleOutlined } from '@ant-design/icons';
+import {
+  DeleteOutlined,
+  QuestionCircleOutlined,
+  CheckCircleOutlined,
+  UnorderedListOutlined,
+  ClockCircleOutlined,
+  SortAscendingOutlined,
+  SortDescendingOutlined
+} from '@ant-design/icons';
 import { Store } from './store';
-import { ADD_TASK, UPDATE_STATUS, GET_FILTER_TASKS, DELETE_TASK, SORT_BY_DATE } from './actions/index';
+import { ADD_TASK, UPDATE_STATUS, GET_FILTER_TASKS, DELETE_TASK, SORT_BY_DATE, UNDO_TASK } from './actions/index';
 import './App.scss';
 
 const dateFormat = require('dateformat');
 const { Option } = Select;
 
 const taskStatus = [
-  { id: 1, label: 'All', key: 'all' },
-  { id: 2, label: 'Active', key: 'active' },
-  { id: 3, label: 'Completed', key: 'completed' }
+  { id: 1, label: 'All', key: 'all', icon: <UnorderedListOutlined /> },
+  { id: 2, label: 'Active', key: 'active', icon: <ClockCircleOutlined /> },
+  { id: 3, label: 'Completed', key: 'completed', icon: <CheckCircleOutlined /> },
+  { id: 4, label: 'Recently Deleted', key: 'recently_deleted', icon: <DeleteOutlined /> }
 ]
 
 function App() {
@@ -19,6 +28,8 @@ function App() {
   const [currentFilter, setCurrentFilter] = useState('all');
   const { state, dispatch } = useContext(Store);
   const { filteredTasks } = state;
+
+  // console.log('state from app', state);
 
   function onChangeStatus(e, item) {
     dispatch({
@@ -76,6 +87,13 @@ function App() {
     });
   }
 
+  function undoDeletedTask(item) {
+    dispatch({
+      type: UNDO_TASK,
+      payload: item
+    })
+  }
+
   return (
     <div className="app-component">
       <div className="content">
@@ -84,9 +102,12 @@ function App() {
           <ul className="status-list">
             {
               taskStatus.map(status => {
+                const { icon, label, id, key } = status;
                 return (
-                  <div key={status.id}>
-                    <li onClick={() => getStatus(status)} className={status.key === currentFilter ? 'active' : ''}>{status.label}</li>
+                  <div key={id}>
+                    <li onClick={() => getStatus(status)} className={key === currentFilter ? 'active' : ''}>
+                      {icon && icon} {label}
+                    </li>
                   </div>
                 )
               })
@@ -104,40 +125,49 @@ function App() {
             onPressEnter={() => addTask()}
           />
           <Divider orientation="left">TODOS</Divider>
-          <Select
-            className="list-by-date"
-            showSearch
-            style={{ width: 200 }}
-            placeholder="Sort by Date"
-            optionFilterProp="children"
-            onChange={onChange}
-            filterOption={(input, option) =>
-              option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-            }
-          >
-            <Option value="asc">Sort Ascending</Option>
-            <Option value="desc">Sort Descending</Option>
-          </Select>
+          {currentFilter !== 'recently_deleted' &&
+            <Select
+              className="list-by-date"
+              showSearch
+              style={{ width: 200 }}
+              placeholder="Sort by Date"
+              optionFilterProp="children"
+              onChange={onChange}
+              filterOption={(input, option) =>
+                option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+              }
+            >
+              <Option value="asc"><SortAscendingOutlined /> Sort Ascending</Option>
+              <Option value="desc"><SortDescendingOutlined /> Sort Descending</Option>
+            </Select>}
           <ul className="list-tasks">
             {
               filteredTasks.length > 0 ? filteredTasks.map((item, index) => {
                 return (
                   <div key={index} className={'task ' + (item.status === 'completed' ? 'completed' : '')}>
                     <li className="task-name">
-                      <Checkbox onChange={(event) => onChangeStatus(event, item)} checked={item.status === 'completed'}>{item.content}</Checkbox>
+                      {
+                        currentFilter !== 'recently_deleted' ?
+                          <Checkbox onChange={(event) => onChangeStatus(event, item)} checked={item.status === 'completed'}>{item.content}</Checkbox> :
+                          item.content
+                      }
                     </li>
-                    <span className="delete-task">
-                      <Popconfirm title="Are you sure？" icon={<QuestionCircleOutlined style={{ color: 'red' }} />} onConfirm={() => deleteTask(item)}>
-                        Delete
-                      </Popconfirm>
-                    </span>
+                    <div className="delete-task">
+                      {
+                        currentFilter !== 'recently_deleted' ?
+                          <Popconfirm title="Are you sure？" icon={<QuestionCircleOutlined style={{ color: 'red' }} />} onConfirm={() => deleteTask(item)}>
+                            Delete
+                          </Popconfirm> :
+                          <span className="undo" onClick={() => undoDeletedTask(item)}>Undo</span>
+                      }
+                    </div>
                     <span className="task-date">{item.date}</span>
                   </div>
                 )
-              }) : <span>There is no any saved tasks here.</span>
+              }) : <span>There is no any task here.</span>
             }
           </ul>
-          <span className="left-items-info"><strong>{state.tasks.filter(task => task.status === 'active').length}</strong> items left</span>
+          {currentFilter !== 'recently_deleted' && <span className="left-items-info"><strong>{state.tasks.filter(task => task.status === 'active').length}</strong> items left</span>}
         </div>
       </div>
     </div>

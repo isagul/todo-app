@@ -3,3 +3,4 @@ export const UPDATE_STATUS = 'UPDATE_STATUS';
 export const GET_FILTER_TASKS = "GET_FILTER_TASKS";
 export const DELETE_TASK = "DELETE_TASK";
 export const SORT_BY_DATE = "SORT_BY_DATE";
+export const UNDO_TASK = "UNDO_TASK";

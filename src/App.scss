@@ -45,6 +45,7 @@ $logoColor: #5D3EBD;
             flex-direction: column;
             padding: 0 1rem;
             background-color: #fafafa;
+            margin-bottom: 1rem;
 
             .add-bar {
                 width: 50%;
@@ -76,6 +77,9 @@ $logoColor: #5D3EBD;
                         color: #ff5858;
                         font-weight: 600;
                         flex: 1;
+                        .undo {
+                            color: rgb(91, 173, 206);
+                        }
                     }
                     .task-date {
                         flex: 1;
