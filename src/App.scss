@@ -25,10 +25,15 @@ $logoColor: #5D3EBD;
 
                 li {
                     transition: margin-left .2s ease;
-
+                    height: 50px;
+                    display: flex;
+                    align-items: center;
                     &:hover {
                         cursor: pointer;
                         margin-left: 3px;
+                    }
+                    span {
+                        margin-right: 5px;
                     }
                 }
 
@@ -46,14 +51,25 @@ $logoColor: #5D3EBD;
             padding: 0 1rem;
             background-color: #fafafa;
             margin-bottom: 1rem;
+            padding-bottom: 1rem;
 
             .add-bar {
+                display: flex;
                 width: 50%;
                 align-self: center;
-
+                
+                input {
+                    color: $logoColor;
+                    border-bottom-right-radius: 0;
+                    border-top-right-radius: 0;
+                }
                 button {
                     background: $logoColor;
                     border-color: $logoColor;
+                    color: #FFD10B;
+                    font-weight: 600;
+                    border-bottom-left-radius: 0;
+                    border-top-left-radius: 0;
                 }
             }
 
@@ -72,9 +88,19 @@ $logoColor: #5D3EBD;
                     .task-name {
                         flex: 3;
                     };
+                    .remaining-time{
+                        display: flex;
+                        flex: 1;
+                        flex-direction: column;
+                        color: darkblue;
+                        > span {
+                            margin-bottom: 5px;
+                        }
+                    }
                     .delete-task {
                         cursor: pointer;
                         color: #ff5858;
+                        margin-left: 1rem;
                         font-weight: 600;
                         flex: 1;
                         .undo {
@@ -131,6 +157,9 @@ $logoColor: #5D3EBD;
             .add-list-area {
                 .add-bar {
                     width: 100%;
+                }
+                .list-by-date {
+                    margin-bottom: 1rem;
                 }
             }
         }

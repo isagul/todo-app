@@ -1,7 +1,6 @@
-import React, { useContext, useState } from 'react';
-import { Input, Checkbox, Divider, Popconfirm, Select } from 'antd';
+import React, { useContext, useState, useEffect } from 'react';
+import { Input, Checkbox, Divider, Popconfirm, Select, Button, TimePicker, Spin } from 'antd';
 import {
-  DeleteOutlined,
   QuestionCircleOutlined,
   CheckCircleOutlined,
   UnorderedListOutlined,
@@ -10,7 +9,18 @@ import {
   SortDescendingOutlined
 } from '@ant-design/icons';
 import { Store } from './store';
-import { ADD_TASK, UPDATE_STATUS, GET_FILTER_TASKS, DELETE_TASK, SORT_BY_DATE, UNDO_TASK } from './actions/index';
+import {
+  ADD_TASK,
+  SORT_BY_DATE,
+  UNDO_TASK,
+  SET_TASKS,
+  UPDATE_STATUS_API,
+  GET_FILTER_TASKS_API,
+  DELETE_TASK_API
+} from './actions/index';
+import Countdown from 'react-countdown';
+import axios from 'axios';
+
 import './App.scss';
 
 const dateFormat = require('dateformat');
@@ -19,62 +29,133 @@ const { Option } = Select;
 const taskStatus = [
   { id: 1, label: 'All', key: 'all', icon: <UnorderedListOutlined /> },
   { id: 2, label: 'Active', key: 'active', icon: <ClockCircleOutlined /> },
-  { id: 3, label: 'Completed', key: 'completed', icon: <CheckCircleOutlined /> },
-  { id: 4, label: 'Recently Deleted', key: 'recently_deleted', icon: <DeleteOutlined /> }
+  { id: 3, label: 'Completed', key: 'completed', icon: <CheckCircleOutlined /> }
 ]
 
 function App() {
   const [taskName, setTaskName] = useState('');
   const [currentFilter, setCurrentFilter] = useState('all');
+  const [loading, setLoading] = useState(false);
+  const [time, setTime] = useState('');
   const { state, dispatch } = useContext(Store);
   const { filteredTasks } = state;
 
   // console.log('state from app', state);
 
+  useEffect(() => {
+    axios.get('http://localhost:3002/task')
+      .then(function (response) {
+        // handle success
+        if (response.status === 200) {
+          dispatch({
+            type: SET_TASKS,
+            payload: response.data.result
+          })
+        }
+      })
+      .catch(function (error) {
+        // handle error
+        console.log(error);
+      })
+  }, [dispatch]);
+
   function onChangeStatus(e, item) {
-    dispatch({
-      type: UPDATE_STATUS,
-      payload: {
-        task: item,
-        value: e.target.checked,
-        currentStatusFilter: currentFilter
-      }
-    });
+    setLoading(true);
+    axios.post('http://localhost:3002/task/update', {
+      id: item._id,
+      value: e.target.checked ? 'completed' : 'active'
+    })
+      .then(function (response) {
+        if (response.status === 200) {
+          dispatch({
+            type: UPDATE_STATUS_API,
+            payload: {
+              data: response.data.result,
+              currentStatusFilter: currentFilter
+            }
+          });
+          setLoading(false);
+        }
+      })
+      .catch(function (error) {
+        setLoading(false);
+        console.log(error);
+      });
   }
 
   function getStatus(status) {
-    setCurrentFilter(status.key);
-    dispatch({
-      type: GET_FILTER_TASKS,
-      payload: status
+    setLoading(true);
+    axios.post('http://localhost:3002/task/by-status', {
+      status: status.key
     })
+      .then(function (response) {
+        if (response.status === 200) {
+          setCurrentFilter(status.key);
+          dispatch({
+            type: GET_FILTER_TASKS_API,
+            payload: {
+              data: response.data.result,
+              currentStatusFilter: status.key
+            }
+          })
+          setLoading(false);
+        }
+      })
+      .catch(function (error) {
+        console.log(error);
+        setLoading(false);
+      })
+
   }
 
   function addTask() {
-    const newTask = {
-      id: '_' + Math.random().toString(36).substr(2, 9),
-      status: 'active',
+    setLoading(true);
+    axios.post('http://localhost:3002/task/create', {
       content: taskName,
-      date: dateFormat(new Date())
-    }
-    dispatch({
-      type: ADD_TASK,
-      payload: {
-        task: newTask,
-        currentStatusFilter: currentFilter
-      }
-    });
-    setTaskName('');
+      date: dateFormat(new Date()),
+      targetTime: time
+    })
+      .then(function (response) {
+        if (response.status === 200) {
+          dispatch({
+            type: ADD_TASK,
+            payload: {
+              task: response.data.addedTask,
+              currentStatusFilter: currentFilter
+            }
+          });
+          setTaskName('');
+          setTime('');
+          setLoading(false);
+        }
+
+      })
+      .catch(function (error) {
+        console.log(error);
+        setLoading(false);
+      });
   }
 
   function deleteTask(item) {
-    dispatch({
-      type: DELETE_TASK,
-      payload: {
-        task: item,
-        currentStatusFilter: currentFilter
-      }
-    });
+    setLoading(true);
+    axios.delete(`http://localhost:3002/task/delete-permanently/${item._id}`)
+      .then(function (response) {
+        if (response.status === 200) {
+          dispatch({
+            type: DELETE_TASK_API,
+            payload: {
+              data: response.data.result,
+              currentStatusFilter: currentFilter
+            }
+          });
+          setLoading(false);
+        }
+
+      })
+      .catch(function (error) {
+        console.log(error);
+        setLoading(false);
+      });
   }
 
   function onChange(value) {
@@ -94,6 +175,18 @@ function App() {
     })
   }
 
+  function onChangeTime(value, dateString) {
+    const a = dateString.split(':');
+
+    const seconds = ((+a[0]) * 60 * 60 + (+a[1]) * 60 + (+a[2])) * 1000;
+    setTime(seconds);
+  }
+
+  function timeComplete(event, item) {
+    /* console.log('event', event);
+    console.log('item', item); */
+  }
+
   return (
     <div className="app-component">
       <div className="content">
@@ -104,11 +197,9 @@ function App() {
               taskStatus.map(status => {
                 const { icon, label, id, key } = status;
                 return (
-                  <div key={id}>
-                    <li onClick={() => getStatus(status)} className={key === currentFilter ? 'active' : ''}>
-                      {icon && icon} {label}
-                    </li>
-                  </div>
+                  <li key={id} onClick={() => getStatus(status)} className={key === currentFilter ? 'active' : ''}>
+                    {icon && icon} {label}
+                  </li>
                 )
               })
             }
@@ -116,20 +207,23 @@ function App() {
         </div>
         <div className="add-list-area">
           <Divider>TODO APP</Divider>
-          <Input
-            className="add-bar"
-            placeholder="Add task"
-            size="middle"
-            value={taskName}
-            onChange={(event) => setTaskName(event.target.value)}
-            onPressEnter={() => addTask()}
-          />
+          <div className="add-bar">
+            <Input
+              placeholder="Add task"
+              size="middle"
+              value={taskName}
+              onChange={(event) => setTaskName(event.target.value)}
+              onPressEnter={() => addTask()}
+            />
+            <TimePicker onChange={onChangeTime} style={{ width: '170px' }} />
+            <Button onClick={() => addTask()}>Add</Button>
+          </div>
+
           <Divider orientation="left">TODOS</Divider>
           {currentFilter !== 'recently_deleted' &&
             <Select
               className="list-by-date"
               showSearch
-              style={{ width: 200 }}
               placeholder="Sort by Date"
               optionFilterProp="children"
               onChange={onChange}
@@ -140,33 +234,45 @@ function App() {
               <Option value="asc"><SortAscendingOutlined /> Sort Ascending</Option>
               <Option value="desc"><SortDescendingOutlined /> Sort Descending</Option>
             </Select>}
-          <ul className="list-tasks">
-            {
-              filteredTasks.length > 0 ? filteredTasks.map((item, index) => {
-                return (
-                  <div key={index} className={'task ' + (item.status === 'completed' ? 'completed' : '')}>
-                    <li className="task-name">
-                      {
-                        currentFilter !== 'recently_deleted' ?
-                          <Checkbox onChange={(event) => onChangeStatus(event, item)} checked={item.status === 'completed'}>{item.content}</Checkbox> :
-                          item.content
-                      }
-                    </li>
-                    <div className="delete-task">
-                      {
-                        currentFilter !== 'recently_deleted' ?
-                          <Popconfirm title="Are you sure？" icon={<QuestionCircleOutlined style={{ color: 'red' }} />} onConfirm={() => deleteTask(item)}>
-                            Delete
+          <Spin spinning={loading}>
+            <ul className="list-tasks">
+              {
+                filteredTasks.length > 0 ? filteredTasks.map((item, index) => {
+                  return (
+                    <div key={index} className={'task ' + (item.status === 'completed' ? 'completed' : '')}>
+                      <li className="task-name">
+                        {
+                          currentFilter !== 'recently_deleted' ?
+                            <Checkbox onChange={(event) => onChangeStatus(event, item)} checked={item.status === 'completed'}>{item.content}</Checkbox> :
+                            item.content
+                        }
+                      </li>
+                      <div className="remaining-time">
+                        {
+                          item.targetTime &&
+                          <>
+                            <span>Remaining Time </span>
+                            <Countdown date={Date.now() + item.targetTime} onTick={(event) => timeComplete(event, item)} />
+                          </>
+                        }
+                      </div>
+                      <div className="delete-task">
+                        {
+                          currentFilter !== 'recently_deleted' ?
+                            <Popconfirm title="Are you sure？" icon={<QuestionCircleOutlined style={{ color: 'red' }} />} onConfirm={() => deleteTask(item)}>
+                              Delete Task
                           </Popconfirm> :
-                          <span className="undo" onClick={() => undoDeletedTask(item)}>Undo</span>
-                      }
+                            <span className="undo" onClick={() => undoDeletedTask(item)}>Undo</span>
+                        }
+                      </div>
+                      <span className="task-date">{item.date}</span>
                     </div>
-                    <span className="task-date">{item.date}</span>
-                  </div>
-                )
-              }) : <span>There is no any task here.</span>
-            }
-          </ul>
+                  )
+                }) : <span>There is no any task here.</span>
+              }
+            </ul>
+          </Spin>
+
           {currentFilter !== 'recently_deleted' && <span className="left-items-info"><strong>{state.tasks.filter(task => task.status === 'active').length}</strong> items left</span>}
         </div>
       </div>

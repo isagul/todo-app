@@ -1,5 +1,16 @@
 import React from 'react';
-import { ADD_TASK, UPDATE_STATUS, GET_FILTER_TASKS, DELETE_TASK, SORT_BY_DATE, UNDO_TASK } from './actions/index';
+import { 
+    ADD_TASK, 
+    UPDATE_STATUS, 
+    GET_FILTER_TASKS, 
+    DELETE_TASK, 
+    SORT_BY_DATE, 
+    UNDO_TASK, 
+    SET_TASKS,
+    UPDATE_STATUS_API,
+    GET_FILTER_TASKS_API,
+    DELETE_TASK_API
+} from './actions/index';
 
 export const Store = React.createContext();
 
@@ -11,6 +22,7 @@ const initialState = {
 
 function reducer(state, action) {
     switch (action.type) {
+         /* before backend */
         case ADD_TASK: {
             const { currentStatusFilter, task } = action.payload;
             state.tasks.push(task);
@@ -116,6 +128,61 @@ function reducer(state, action) {
                 tasks: [...state.tasks],
                 filteredTasks: [...state.recentlyDeleted]
             } 
+        }
+
+        /* after backend */
+
+        case SET_TASKS: {
+            return {
+                ...state,
+                tasks: [...state.tasks, ...action.payload],
+                filteredTasks: [...state.filteredTasks, ...action.payload],
+            }
+        }
+
+        case UPDATE_STATUS_API: {
+            const updatedTasks = action.payload.data.filter(task => {
+                if (action.payload.currentStatusFilter === 'all') {
+                    return task;
+                } else {
+                    return task.status === action.payload.currentStatusFilter;
+                }
+            });
+            return {
+                ...state,
+                filteredTasks: [...updatedTasks],
+                tasks: [...updatedTasks]
+                
+            }
+        }
+        
+        case GET_FILTER_TASKS_API: {
+            const updatedTasks = action.payload.data.filter(task => {
+                if (action.payload.currentStatusFilter === 'all') {
+                    return task;
+                } else {
+                    return task.status === action.payload.currentStatusFilter;
+                }
+            });
+            return {
+                ...state,
+                filteredTasks: [...updatedTasks]
+            }
+        }
+
+        case DELETE_TASK_API: {
+            const updatedTasks = action.payload.data.filter(task => {
+                if (action.payload.currentStatusFilter === 'all') {
+                    return task;
+                } else {
+                    return task.status === action.payload.currentStatusFilter;
+                }
+            });
+            return {
+                ...state,
+                filteredTasks: [...updatedTasks],
+                tasks: [...updatedTasks]
+            }
         }
         default:
             return state;
