@@ -10,7 +10,7 @@ $logoColor: #5D3EBD;
             background-color: #eaeaea;
             display: flex;
             flex-direction: column;
-            height: 100vh;
+            min-height: 100vh;
 
             .status-list {
                 list-style-type: none;

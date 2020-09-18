@@ -6,19 +6,21 @@ import {
   UnorderedListOutlined,
   ClockCircleOutlined,
   SortAscendingOutlined,
-  SortDescendingOutlined
+  SortDescendingOutlined,
+  RestOutlined
 } from '@ant-design/icons';
 import { Store } from './store';
 import {
   ADD_TASK,
   SORT_BY_DATE,
-  UNDO_TASK,
   SET_TASKS,
   UPDATE_STATUS_API,
   GET_FILTER_TASKS_API,
-  DELETE_TASK_API
+  DELETE_TASK_PERM_API,
+  DELETE_TASK_TEMP_API
 } from './actions/index';
 import Countdown from 'react-countdown';
+import { toast } from 'react-toastify';
 import axios from 'axios';
 
 import './App.scss';
@@ -29,14 +31,16 @@ const { Option } = Select;
 const taskStatus = [
   { id: 1, label: 'All', key: 'all', icon: <UnorderedListOutlined /> },
   { id: 2, label: 'Active', key: 'active', icon: <ClockCircleOutlined /> },
-  { id: 3, label: 'Completed', key: 'completed', icon: <CheckCircleOutlined /> }
+  { id: 3, label: 'Completed', key: 'completed', icon: <CheckCircleOutlined /> },
+  { id: 4, label: 'Recently Deleted', key: 'deleted', icon: <RestOutlined /> }
 ]
 
 function App() {
   const [taskName, setTaskName] = useState('');
   const [currentFilter, setCurrentFilter] = useState('all');
   const [loading, setLoading] = useState(false);
-  const [time, setTime] = useState('');
+  const [time, setTime] = useState(null);
+
   const { state, dispatch } = useContext(Store);
   const { filteredTasks } = state;
 
@@ -49,7 +53,7 @@ function App() {
         if (response.status === 200) {
           dispatch({
             type: SET_TASKS,
-            payload: response.data.result
+            payload: response.data.result.filter(task => task.status !== 'deleted')
           })
         }
       })
@@ -109,40 +113,45 @@ function App() {
   }
 
   function addTask() {
-    setLoading(true);
-    axios.post('http://localhost:3002/task/create', {
-      content: taskName,
-      date: dateFormat(new Date()),
-      targetTime: time
-    })
-      .then(function (response) {
-        if (response.status === 200) {
-          dispatch({
-            type: ADD_TASK,
-            payload: {
-              task: response.data.addedTask,
-              currentStatusFilter: currentFilter
-            }
-          });
-          setTaskName('');
-          setTime('');
-          setLoading(false);
-        }
-
+    if (taskName && taskName.trim().length > 0) {
+      setLoading(true);
+      axios.post('http://localhost:3002/task/create', {
+        content: taskName,
+        date: dateFormat(new Date()),
+        targetTime: time
       })
-      .catch(function (error) {
-        console.log(error);
-        setLoading(false);
-      });
+        .then(function (response) {
+          if (response.status === 200) {
+            dispatch({
+              type: ADD_TASK,
+              payload: {
+                task: response.data.addedTask,
+                currentStatusFilter: currentFilter
+              }
+            });
+            setTaskName('');
+            setLoading(false);
+          }
+
+        })
+        .catch(function (error) {
+          console.log(error);
+          setLoading(false);
+        });
+      toast.success("The task was added successfully");
+    } else {
+      toast.warn("Please type something into todo field");
+    }
+
   }
 
-  function deleteTask(item) {
+  function deleteTaskPermanently(item) {
     setLoading(true);
     axios.delete(`http://localhost:3002/task/delete-permanently/${item._id}`)
       .then(function (response) {
         if (response.status === 200) {
           dispatch({
-            type: DELETE_TASK_API,
+            type: DELETE_TASK_PERM_API,
             payload: {
               data: response.data.result,
               currentStatusFilter: currentFilter
@@ -158,6 +167,31 @@ function App() {
       });
   }
 
+  function deleteTaskTemporarily(item) {
+    setLoading(true);
+    axios.post('http://localhost:3002/task/delete-temporarily', {
+      id: item._id
+    })
+      .then(function (response) {
+        if (response.status === 200) {
+          dispatch({
+            type: DELETE_TASK_TEMP_API,
+            payload: {
+              data: response.data.result.filter(item => item.status !== 'deleted'),
+              currentStatusFilter: currentFilter
+            }
+          });
+          setLoading(false);
+
+        }
+
+      })
+      .catch(function (error) {
+        setLoading(false);
+        console.log(error);
+      });
+  }
+
   function onChange(value) {
     dispatch({
       type: SORT_BY_DATE,
@@ -168,23 +202,11 @@ function App() {
     });
   }
 
-  function undoDeletedTask(item) {
-    dispatch({
-      type: UNDO_TASK,
-      payload: item
-    })
-  }
-
   function onChangeTime(value, dateString) {
     const a = dateString.split(':');
 
     const seconds = ((+a[0]) * 60 * 60 + (+a[1]) * 60 + (+a[2])) * 1000;
     setTime(seconds);
-  }
-
-  function timeComplete(event, item) {
-    /* console.log('event', event);
-    console.log('item', item); */
   }
 
   return (
@@ -220,7 +242,7 @@ function App() {
           </div>
 
           <Divider orientation="left">TODOS</Divider>
-          {currentFilter !== 'recently_deleted' &&
+          {currentFilter !== 'deleted' &&
             <Select
               className="list-by-date"
               showSearch
@@ -241,28 +263,34 @@ function App() {
                   return (
                     <div key={index} className={'task ' + (item.status === 'completed' ? 'completed' : '')}>
                       <li className="task-name">
-                        {
-                          currentFilter !== 'recently_deleted' ?
-                            <Checkbox onChange={(event) => onChangeStatus(event, item)} checked={item.status === 'completed'}>{item.content}</Checkbox> :
-                            item.content
-                        }
+                        <Checkbox
+                          onChange={(event) => onChangeStatus(event, item)}
+                          checked={item.status === 'completed'}
+                          disabled={item.status === 'deleted'}
+                        >
+                          {item.content}
+                        </Checkbox>
                       </li>
                       <div className="remaining-time">
                         {
-                          item.targetTime &&
+                          item.targetTime && item.status !== 'deleted' &&
                           <>
                             <span>Remaining Time </span>
-                            <Countdown date={Date.now() + item.targetTime} onTick={(event) => timeComplete(event, item)} />
+                            <Countdown
+                              date={Date.now() + item.targetTime}
+                            />
                           </>
                         }
                       </div>
                       <div className="delete-task">
                         {
-                          currentFilter !== 'recently_deleted' ?
-                            <Popconfirm title="Are you sure？" icon={<QuestionCircleOutlined style={{ color: 'red' }} />} onConfirm={() => deleteTask(item)}>
-                              Delete Task
-                          </Popconfirm> :
-                            <span className="undo" onClick={() => undoDeletedTask(item)}>Undo</span>
+                          item.status !== 'deleted' ?
+                            <Popconfirm disabled={item.status === 'deleted'} title="Are you sure？" icon={<QuestionCircleOutlined style={{ color: 'red' }} />} onConfirm={() => deleteTaskTemporarily(item)}>
+                              Delete
+                            </Popconfirm> :
+                            <Popconfirm title="Are you sure？" icon={<QuestionCircleOutlined style={{ color: 'red' }} />} onConfirm={() => deleteTaskPermanently(item)}>
+                              Delete Permanently
+                          </Popconfirm>
                         }
                       </div>
                       <span className="task-date">{item.date}</span>
@@ -273,7 +301,7 @@ function App() {
             </ul>
           </Spin>
 
-          {currentFilter !== 'recently_deleted' && <span className="left-items-info"><strong>{state.tasks.filter(task => task.status === 'active').length}</strong> items left</span>}
+          {currentFilter !== 'deleted' && <span className="left-items-info"><strong>{state.tasks.filter(task => task.status === 'active').length}</strong> items left</span>}
         </div>
       </div>
     </div>

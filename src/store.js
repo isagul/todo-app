@@ -9,7 +9,8 @@ import {
     SET_TASKS,
     UPDATE_STATUS_API,
     GET_FILTER_TASKS_API,
-    DELETE_TASK_API
+    DELETE_TASK_PERM_API,
+    DELETE_TASK_TEMP_API
 } from './actions/index';
 
 export const Store = React.createContext();
@@ -27,13 +28,16 @@ function reducer(state, action) {
             const { currentStatusFilter, task } = action.payload;
             state.tasks.push(task);
             state.filteredTasks.push(task);
-            const updatedTasks = state.tasks.filter(task => {
+            /* const updatedTasks = state.tasks.filter(task => {
                 if (currentStatusFilter === 'all') {
                     return task;
                 } else {
                     return task.status === currentStatusFilter;
                 }
-            });
+            }); */
+
+            const updatedTasks = currentStatusFilter === 'all' ? state.tasks.filter(task => task.status !== 'deleted') : 
+            state.tasks.filter(task => task.status === currentStatusFilter);
             return {
                 ...state,
                 filteredTasks: [...updatedTasks]
@@ -151,7 +155,7 @@ function reducer(state, action) {
             return {
                 ...state,
                 filteredTasks: [...updatedTasks],
-                tasks: [...updatedTasks]
+                tasks: [...action.payload.data]
                 
             }
         }
@@ -170,7 +174,7 @@ function reducer(state, action) {
             }
         }
 
-        case DELETE_TASK_API: {
+        case DELETE_TASK_PERM_API: {
             const updatedTasks = action.payload.data.filter(task => {
                 if (action.payload.currentStatusFilter === 'all') {
                     return task;
@@ -181,7 +185,22 @@ function reducer(state, action) {
             return {
                 ...state,
                 filteredTasks: [...updatedTasks],
-                tasks: [...updatedTasks]
+                tasks: [...action.payload.data]
+            }
+        }
+
+        case DELETE_TASK_TEMP_API: {
+            const updatedTasks = action.payload.data.filter(task => {
+                if (action.payload.currentStatusFilter === 'all') {
+                    return task;
+                } else {
+                    return task.status === action.payload.currentStatusFilter;
+                }
+            });
+            return {
+                ...state,
+                filteredTasks: [...updatedTasks],
+                tasks: [...action.payload.data]
             }
         }
         default:
