@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { Input, Checkbox, Divider, Popconfirm, Select, Button, DatePicker, Spin } from 'antd';
+import { Input, Checkbox, Divider, Popconfirm, Select, Button, DatePicker, Spin, Pagination } from 'antd';
 import {
   QuestionCircleOutlined,
   CheckCircleOutlined,
@@ -42,6 +42,8 @@ function App() {
   const [currentFilter, setCurrentFilter] = useState('all'); // it holds filter name located on the left side of the page
   const [loading, setLoading] = useState(false);
   const [time, setTime] = useState(null); // it holds date selected from the datepicker
+  const [currentPage, setCurrentPage] = useState(1);
+  const linksPerPage = 5;
 
   const { state, dispatch } = useContext(Store);
   const { filteredTasks } = state;
@@ -65,6 +67,16 @@ function App() {
         console.log(error);
       })
   }, [dispatch]);
+
+  function getCurrentTasks() {
+    const indexOfLastLink = currentPage * linksPerPage;
+    const indexOfFirstLink = indexOfLastLink - linksPerPage;
+    return filteredTasks.slice(indexOfFirstLink, indexOfLastLink);
+  }
+
+  function getPaginationChange(page) {
+    setCurrentPage(page);
+  }
 
   function onChangeStatus(e, item) {
     setLoading(true);
@@ -161,6 +173,11 @@ function App() {
             }
           });
           setLoading(false);
+          if (getCurrentTasks().length === 1) {
+            if (currentPage > 1) {
+              setCurrentPage(currentPage - 1);
+            }
+          }
         }
 
       })
@@ -171,11 +188,11 @@ function App() {
   }
 
   function deleteTaskTemporarily(item) {
-    setLoading(true);
     axios.post('/task/delete-temporarily', {
       id: item._id
     })
       .then(function (response) {
+        setLoading(true);
         if (response.status === 200) {
           dispatch({
             type: DELETE_TASK_TEMP_API,
@@ -185,9 +202,12 @@ function App() {
             }
           });
           setLoading(false);
-
+          if (getCurrentTasks().length === 1) {
+            if (currentPage > 1) {
+              setCurrentPage(currentPage - 1);
+            }
+          }
         }
-
       })
       .catch(function (error) {
         setLoading(false);
@@ -264,7 +284,7 @@ function App() {
           <Spin spinning={loading}>
             <ul className="list-tasks">
               {
-                filteredTasks.length > 0 ? filteredTasks.map((item, index) => {
+                filteredTasks.length > 0 ? getCurrentTasks().map((item, index) => {
                   return (
                     <div key={index} className={'task ' + (item.status === 'completed' ? 'completed' : '')}>
                       <li className="task-name">
@@ -290,10 +310,17 @@ function App() {
                       <div className="delete-task">
                         {
                           item.status !== 'deleted' ?
-                            <Popconfirm disabled={item.status === 'deleted'} title="Are you sure？" icon={<QuestionCircleOutlined style={{ color: 'red' }} />} onConfirm={() => deleteTaskTemporarily(item)}>
+                            <Popconfirm
+                              disabled={item.status === 'deleted'}
+                              title="Are you sure？"
+                              icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
+                              onConfirm={() => deleteTaskTemporarily(item)}>
                               Delete
                             </Popconfirm> :
-                            <Popconfirm title="Are you sure？" icon={<QuestionCircleOutlined style={{ color: 'red' }} />} onConfirm={() => deleteTaskPermanently(item)}>
+                            <Popconfirm
+                              title="Are you sure"
+                              icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
+                              onConfirm={() => deleteTaskPermanently(item)}>
                               Delete Permanently
                             </Popconfirm>
                         }
@@ -307,6 +334,16 @@ function App() {
           </Spin>
 
           {currentFilter !== 'deleted' && <span className="left-items-info"><strong>{state.tasks.filter(task => task.status === 'active').length}</strong> items left</span>}
+          {
+            filteredTasks.length > 0 &&
+            <Pagination
+              defaultCurrent={1}
+              current={currentPage}
+              total={filteredTasks.length}
+              pageSize={linksPerPage}
+              onChange={getPaginationChange}
+            />
+          }
         </div>
       </div>
     </div>

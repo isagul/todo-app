@@ -136,6 +136,11 @@ $logoColor: #5D3EBD;
             .list-by-date {
                 align-self: flex-end;
             }
+
+            .ant-pagination {
+                text-align: right;
+                margin-top: 10px;
+            }
         }
     }
 }
