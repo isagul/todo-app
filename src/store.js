@@ -23,18 +23,13 @@ const initialState = {
 
 function reducer(state, action) {
     switch (action.type) {
+
          /* before backend */
+         
         case ADD_TASK: {
             const { currentStatusFilter, task } = action.payload;
             state.tasks.push(task);
             state.filteredTasks.push(task);
-            /* const updatedTasks = state.tasks.filter(task => {
-                if (currentStatusFilter === 'all') {
-                    return task;
-                } else {
-                    return task.status === currentStatusFilter;
-                }
-            }); */
 
             const updatedTasks = currentStatusFilter === 'all' ? state.tasks.filter(task => task.status !== 'deleted') : 
             state.tasks.filter(task => task.status === currentStatusFilter);

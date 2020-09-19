@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { Input, Checkbox, Divider, Popconfirm, Select, Button, TimePicker, Spin } from 'antd';
+import { Input, Checkbox, Divider, Popconfirm, Select, Button, DatePicker, Spin } from 'antd';
 import {
   QuestionCircleOutlined,
   CheckCircleOutlined,
@@ -22,7 +22,6 @@ import {
 import Countdown from 'react-countdown';
 import { toast } from 'react-toastify';
 import axios from 'axios';
-
 import './App.scss';
 
 const dateFormat = require('dateformat');
@@ -33,21 +32,23 @@ const taskStatus = [
   { id: 2, label: 'Active', key: 'active', icon: <ClockCircleOutlined /> },
   { id: 3, label: 'Completed', key: 'completed', icon: <CheckCircleOutlined /> },
   { id: 4, label: 'Recently Deleted', key: 'deleted', icon: <RestOutlined /> }
-]
+];
+
+axios.defaults.baseURL = 'https://api-savenote.herokuapp.com';
+// axios.defaults.baseURL = 'http://localhost:3002';
 
 function App() {
-  const [taskName, setTaskName] = useState('');
-  const [currentFilter, setCurrentFilter] = useState('all');
+  const [taskName, setTaskName] = useState('');  // it holds new task that will be added
+  const [currentFilter, setCurrentFilter] = useState('all'); // it holds filter name located on the left side of the page
   const [loading, setLoading] = useState(false);
-  const [time, setTime] = useState(null);
+  const [time, setTime] = useState(null); // it holds date selected from the datepicker
 
   const { state, dispatch } = useContext(Store);
   const { filteredTasks } = state;
 
-  // console.log('state from app', state);
-
   useEffect(() => {
-    axios.get('http://localhost:3002/task')
+    setLoading(true);
+    axios.get('/task')
       .then(function (response) {
         // handle success
         if (response.status === 200) {
@@ -55,17 +56,19 @@ function App() {
             type: SET_TASKS,
             payload: response.data.result.filter(task => task.status !== 'deleted')
           })
+          setLoading(false);
         }
       })
       .catch(function (error) {
         // handle error
+        setLoading(false);
         console.log(error);
       })
   }, [dispatch]);
 
   function onChangeStatus(e, item) {
     setLoading(true);
-    axios.post('http://localhost:3002/task/update', {
+    axios.post('/task/update', {
       id: item._id,
       value: e.target.checked ? 'completed' : 'active'
     })
@@ -89,7 +92,7 @@ function App() {
 
   function getStatus(status) {
     setLoading(true);
-    axios.post('http://localhost:3002/task/by-status', {
+    axios.post('/task/by-status', {
       status: status.key
     })
       .then(function (response) {
@@ -115,7 +118,7 @@ function App() {
   function addTask() {
     if (taskName && taskName.trim().length > 0) {
       setLoading(true);
-      axios.post('http://localhost:3002/task/create', {
+      axios.post('/task/create', {
         content: taskName,
         date: dateFormat(new Date()),
         targetTime: time
@@ -131,6 +134,7 @@ function App() {
             });
             setTaskName('');
             setLoading(false);
+            toast.success("The task was added successfully");
           }
 
         })
@@ -138,7 +142,6 @@ function App() {
           console.log(error);
           setLoading(false);
         });
-      toast.success("The task was added successfully");
     } else {
       toast.warn("Please type something into todo field");
     }
@@ -147,7 +150,7 @@ function App() {
 
   function deleteTaskPermanently(item) {
     setLoading(true);
-    axios.delete(`http://localhost:3002/task/delete-permanently/${item._id}`)
+    axios.delete(`/task/delete-permanently/${item._id}`)
       .then(function (response) {
         if (response.status === 200) {
           dispatch({
@@ -169,7 +172,7 @@ function App() {
 
   function deleteTaskTemporarily(item) {
     setLoading(true);
-    axios.post('http://localhost:3002/task/delete-temporarily', {
+    axios.post('/task/delete-temporarily', {
       id: item._id
     })
       .then(function (response) {
@@ -192,7 +195,7 @@ function App() {
       });
   }
 
-  function onChange(value) {
+  function onChangeSortByDate(value) {
     dispatch({
       type: SORT_BY_DATE,
       payload: {
@@ -202,11 +205,13 @@ function App() {
     });
   }
 
-  function onChangeTime(value, dateString) {
-    const a = dateString.split(':');
-
-    const seconds = ((+a[0]) * 60 * 60 + (+a[1]) * 60 + (+a[2])) * 1000;
-    setTime(seconds);
+  function onChangeTime(value) {
+    if (value !== null) {
+      const seconds = value._d - new Date();
+      setTime(seconds);
+    } else {
+      setTime(value);
+    }
   }
 
   return (
@@ -237,7 +242,7 @@ function App() {
               onChange={(event) => setTaskName(event.target.value)}
               onPressEnter={() => addTask()}
             />
-            <TimePicker onChange={onChangeTime} style={{ width: '170px' }} />
+            <DatePicker showTime onChange={onChangeTime} />
             <Button onClick={() => addTask()}>Add</Button>
           </div>
 
@@ -248,7 +253,7 @@ function App() {
               showSearch
               placeholder="Sort by Date"
               optionFilterProp="children"
-              onChange={onChange}
+              onChange={onChangeSortByDate}
               filterOption={(input, option) =>
                 option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
               }
@@ -290,13 +295,13 @@ function App() {
                             </Popconfirm> :
                             <Popconfirm title="Are you sure？" icon={<QuestionCircleOutlined style={{ color: 'red' }} />} onConfirm={() => deleteTaskPermanently(item)}>
                               Delete Permanently
-                          </Popconfirm>
+                            </Popconfirm>
                         }
                       </div>
                       <span className="task-date">{item.date}</span>
                     </div>
                   )
-                }) : <span>There is no any task here.</span>
+                }) : <span>There is no task here.</span>
               }
             </ul>
           </Spin>
