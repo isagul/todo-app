@@ -118,6 +118,7 @@ function App() {
             }
           })
           setLoading(false);
+          setCurrentPage(1);
         }
       })
       .catch(function (error) {
