@@ -142,7 +142,7 @@ function reducer(state, action) {
         case UPDATE_STATUS_API: {
             const updatedTasks = action.payload.data.filter(task => {
                 if (action.payload.currentStatusFilter === 'all') {
-                    return task;
+                    return task.status !== 'deleted';
                 } else {
                     return task.status === action.payload.currentStatusFilter;
                 }
@@ -151,7 +151,6 @@ function reducer(state, action) {
                 ...state,
                 filteredTasks: [...updatedTasks],
                 tasks: [...action.payload.data]
-                
             }
         }
         

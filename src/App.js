@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { Input, Checkbox, Divider, Popconfirm, Select, Button, DatePicker, Spin, Pagination } from 'antd';
+import { Input, Checkbox, Divider, Popconfirm, Select, Button, message, Spin, Pagination } from 'antd';
 import {
   QuestionCircleOutlined,
   CheckCircleOutlined,
@@ -19,8 +19,6 @@ import {
   DELETE_TASK_PERM_API,
   DELETE_TASK_TEMP_API
 } from './actions/index';
-import Countdown from 'react-countdown';
-import { toast } from 'react-toastify';
 import axios from 'axios';
 import './App.scss';
 
@@ -41,7 +39,6 @@ function App() {
   const [taskName, setTaskName] = useState('');  // it holds new task that will be added
   const [currentFilter, setCurrentFilter] = useState('all'); // it holds filter name located on the left side of the page
   const [loading, setLoading] = useState(false);
-  const [time, setTime] = useState(null); // it holds date selected from the datepicker
   const [currentPage, setCurrentPage] = useState(1);
   const linksPerPage = 5;
 
@@ -133,8 +130,7 @@ function App() {
       setLoading(true);
       axios.post('/task/create', {
         content: taskName,
-        date: dateFormat(new Date()),
-        targetTime: time
+        date: dateFormat(new Date())
       })
         .then(function (response) {
           if (response.status === 200) {
@@ -147,18 +143,16 @@ function App() {
             });
             setTaskName('');
             setLoading(false);
-            toast.success("The task was added successfully");
+            message.success("The task was added successfully");
           }
-
         })
         .catch(function (error) {
           console.log(error);
           setLoading(false);
         });
     } else {
-      toast.warn("Please type something into todo field");
+      message.warn("Please type something into todo field");
     }
-
   }
 
   function deleteTaskPermanently(item) {
@@ -226,15 +220,6 @@ function App() {
     });
   }
 
-  function onChangeTime(value) {
-    if (value !== null) {
-      const seconds = value._d - new Date();
-      setTime(seconds);
-    } else {
-      setTime(value);
-    }
-  }
-
   return (
     <div className="app-component">
       <div className="content">
@@ -263,7 +248,6 @@ function App() {
               onChange={(event) => setTaskName(event.target.value)}
               onPressEnter={() => addTask()}
             />
-            <DatePicker showTime onChange={onChangeTime} />
             <Button onClick={() => addTask()}>Add</Button>
           </div>
 
@@ -297,17 +281,6 @@ function App() {
                           {item.content}
                         </Checkbox>
                       </li>
-                      <div className="remaining-time">
-                        {
-                          item.targetTime && item.status !== 'deleted' &&
-                          <>
-                            <span>Remaining Time </span>
-                            <Countdown
-                              date={Date.now() + item.targetTime}
-                            />
-                          </>
-                        }
-                      </div>
                       <div className="delete-task">
                         {
                           item.status !== 'deleted' ?
