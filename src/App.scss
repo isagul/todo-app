@@ -1,4 +1,4 @@
-$logoColor: #5D3EBD;
+@import './constants/colors.scss';
 
 .app-component {
     .content {
@@ -11,39 +11,6 @@ $logoColor: #5D3EBD;
             background-color: #eaeaea;
             display: flex;
             flex-direction: column;
-
-            .status-list {
-                list-style-type: none;
-                padding-left: 1rem;
-                margin-bottom: 0;
-
-                >div {
-                    height: 50px;
-                    display: flex;
-                    align-items: center;
-                }
-
-                li {
-                    transition: margin-left .2s ease;
-                    height: 50px;
-                    display: flex;
-                    align-items: center;
-
-                    &:hover {
-                        cursor: pointer;
-                        margin-left: 3px;
-                    }
-
-                    span {
-                        margin-right: 5px;
-                    }
-                }
-
-                .active {
-                    font-weight: 600;
-                    color: $logoColor;
-                }
-            }
         }
 
         .add-list-area {
