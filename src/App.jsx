@@ -2,62 +2,49 @@ import React, { useContext, useState, useEffect } from 'react';
 import { Input, Checkbox, Divider, Popconfirm, Select, Button, message, Spin, Pagination } from 'antd';
 import {
   QuestionCircleOutlined,
-  CheckCircleOutlined,
-  UnorderedListOutlined,
-  ClockCircleOutlined,
   SortAscendingOutlined,
   SortDescendingOutlined,
-  RestOutlined
 } from '@ant-design/icons';
 import { Store } from './store';
 import { 
   addTask, 
-  filterTasks, 
   sortByDate, 
   setTasks, 
   deleteTaskPerm, 
   deleteTaskTemp,
-  updateStatus 
+  updateStatus,
+  setLoading,
+  setCurrentPage
 } from './actions/index';
 import { axiosInstance } from './utils/AxiosConfig';
+import FilterArea from './components/FilterArea';
 import './App.scss';
 
 const dateFormat = require('dateformat');
 const { Option } = Select;
 
-const taskStatus = [
-  { id: 1, label: 'All', key: 'all', icon: <UnorderedListOutlined /> },
-  { id: 2, label: 'Active', key: 'active', icon: <ClockCircleOutlined /> },
-  { id: 3, label: 'Completed', key: 'completed', icon: <CheckCircleOutlined /> },
-  { id: 4, label: 'Recently Deleted', key: 'deleted', icon: <RestOutlined /> }
-];
-
 function App() {
-  const [taskName, setTaskName] = useState('');  // it holds new task that will be added
-  const [currentFilter, setCurrentFilter] = useState('all'); // it holds filter name located on the left side of the page
-  const [loading, setLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [taskName, setTaskName] = useState('');
   const linksPerPage = 5;
 
   const { state, dispatch } = useContext(Store);
-  const { filteredTasks } = state;
+  const { filteredTasks, loading, currentPage, currentFilter } = state;
 
   useEffect(() => {
-    setLoading(true);
+    setLoading({status: true}, dispatch);
     axiosInstance.get('/task')
       .then(function (response) {
-        // handle success
         if (response.status === 200) {
           setTasks({
             data: response.data.result.filter(task => task.status !== 'deleted')
           }, dispatch)
-          setLoading(false);
         }
       })
       .catch(function (error) {
-        // handle error
-        setLoading(false);
         console.log(error);
+      })
+      .then(() => {
+        setLoading({status: false}, dispatch);
       })
   }, [dispatch]);
 
@@ -68,11 +55,11 @@ function App() {
   }
 
   function getPaginationChange(page) {
-    setCurrentPage(page);
+    setCurrentPage({value: page}, dispatch);
   }
 
   function onChangeStatus(e, item) {
-    setLoading(true);
+    setLoading({status: true}, dispatch);
     axiosInstance.post('/task/update', {
       id: item._id,
       value: e.target.checked ? 'completed' : 'active'
@@ -83,41 +70,19 @@ function App() {
             data: response.data.result,
             currentStatusFilter: currentFilter
           }, dispatch)
-          setLoading(false);
-        }
-      })
-      .catch(function (error) {
-        setLoading(false);
-        console.log(error);
-      });
-  }
-
-  function getStatus(status) {
-    setLoading(true);
-    axiosInstance.post('/task/by-status', {
-      status: status.key
-    })
-      .then(function (response) {
-        if (response.status === 200) {
-          setCurrentFilter(status.key);
-          filterTasks({
-            data: response.data.result,
-            currentStatusFilter: status.key
-          }, dispatch)
-          setLoading(false);
-          setCurrentPage(1);
         }
       })
       .catch(function (error) {
         console.log(error);
-        setLoading(false);
       })
-
+      .then(() => {
+        setLoading({status: false}, dispatch);
+      })
   }
 
   function addTaskTodo() {
     if (taskName && taskName.trim().length > 0) {
-      setLoading(true);
+      setLoading({status: true}, dispatch);
       axiosInstance.post('/task/create', {
         content: taskName,
         date: dateFormat(new Date())
@@ -130,21 +95,22 @@ function App() {
             }, dispatch)
 
             setTaskName('');
-            setLoading(false);
             message.success("The task was added successfully");
           }
         })
         .catch(function (error) {
           console.log(error);
-          setLoading(false);
-        });
+        })
+        .then(() => {
+          setLoading({status: false}, dispatch);
+        })
     } else {
       message.warn("Please type something into todo field");
     }
   }
 
   function deleteTaskPermanently(item) {
-    setLoading(true);
+    setLoading({status: true}, dispatch);
     axiosInstance.delete(`/task/delete-permanently/${item._id}`)
       .then(function (response) {
         if (response.status === 200) {
@@ -152,10 +118,9 @@ function App() {
             data: response.data.result,
             currentStatusFilter: currentFilter
           }, dispatch)
-          setLoading(false);
           if (getCurrentTasks().length === 1) {
             if (currentPage > 1) {
-              setCurrentPage(currentPage - 1);
+              setCurrentPage({value: currentPage - 1}, dispatch);
             }
           }
         }
@@ -163,8 +128,10 @@ function App() {
       })
       .catch(function (error) {
         console.log(error);
-        setLoading(false);
-      });
+      })
+      .then(() => {
+        setLoading({status: false}, dispatch);
+      })
   }
 
   function deleteTaskTemporarily(item) {
@@ -172,24 +139,25 @@ function App() {
       id: item._id
     })
       .then(function (response) {
-        setLoading(true);
+        setLoading({status: true}, dispatch);
         if (response.status === 200) {
           deleteTaskTemp({
             data: response.data.result.filter(item => item.status !== 'deleted'),
             currentStatusFilter: currentFilter
           }, dispatch)
-          setLoading(false);
           if (getCurrentTasks().length === 1) {
             if (currentPage > 1) {
-              setCurrentPage(currentPage - 1);
+              setCurrentPage({value: currentPage - 1}, dispatch);
             }
           }
         }
       })
       .catch(function (error) {
-        setLoading(false);
         console.log(error);
-      });
+      })
+      .then(() => {
+        setLoading({status: false}, dispatch);
+      })
   }
 
   function onChangeSortByDate(value) {
@@ -204,18 +172,7 @@ function App() {
       <div className="content">
         <div className="status-area">
           <Divider orientation="left">Filters</Divider>
-          <ul className="status-list">
-            {
-              taskStatus.map(status => {
-                const { icon, label, id, key } = status;
-                return (
-                  <li key={id} onClick={() => getStatus(status)} className={key === currentFilter ? 'active' : ''}>
-                    {icon && icon} {label}
-                  </li>
-                )
-              })
-            }
-          </ul>
+          <FilterArea />
         </div>
         <div className="add-list-area">
           <Divider>TODO APP</Divider>

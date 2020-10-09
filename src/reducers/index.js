@@ -1,6 +1,9 @@
 import { todoReducer } from './TodoReducers';
 import { sortDateReducer } from './SortDateReducers';
 import { filterTaskReducer } from './FilterTasksReducers';
+import { loadingReducer } from './LoadingReducers';
+import { currentPageReducer } from './CurrentPageReducers';
+import { currentFilterReducer } from './CurrentFilterReducers';
 
 const combineReducers = (...reducers) => {
     return (state, action) => {
@@ -10,6 +13,13 @@ const combineReducers = (...reducers) => {
     }
 }
 
-const rootReducer = combineReducers(todoReducer, sortDateReducer, filterTaskReducer);
+const rootReducer = combineReducers(
+    todoReducer,
+    sortDateReducer,
+    filterTaskReducer,
+    loadingReducer,
+    currentPageReducer,
+    currentFilterReducer
+);
 
 export default rootReducer;

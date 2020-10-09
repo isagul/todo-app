@@ -6,7 +6,10 @@ export const Store = createContext();
 const initialState = {
     tasks: [],
     filteredTasks: [],
-    recentlyDeleted: []
+    recentlyDeleted: [],
+    loading: false,
+    currentPage: 1,
+    currentFilter: 'all'
 };
 
 export function StoreProvider(props) {

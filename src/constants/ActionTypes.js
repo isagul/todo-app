@@ -5,3 +5,6 @@ export const SORT_BY_DATE = "SORT_BY_DATE";
 export const SET_TASKS = "SET_TASKS";
 export const DELETE_TASK_PERM = "DELETE_TASK_PERM";
 export const DELETE_TASK_TEMP = "DELETE_TASK_TEMP";
+export const SET_LOADING = "SET_LOADING";
+export const SET_CURRENT_PAGE = "SET_CURRENT_PAGE";
+export const SET_CURRENT_FILTER= "SET_CURRENT_FILTER";
