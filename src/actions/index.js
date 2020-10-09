@@ -1,12 +1,3 @@
-export const ADD_TASK = 'ADD_TASK';
-export const UPDATE_STATUS = 'UPDATE_STATUS';
-export const GET_FILTER_TASKS = "GET_FILTER_TASKS";
-export const DELETE_TASK = "DELETE_TASK";
-export const SORT_BY_DATE = "SORT_BY_DATE";
-export const UNDO_TASK = "UNDO_TASK";
-export const UPDATE_TARGET_TIME = "UPDATE_TARGET_TIME";
-export const SET_TASKS = "SET_TASKS";
-export const UPDATE_STATUS_API = "UPDATE_STATUS_API";
-export const GET_FILTER_TASKS_API = "GET_FILTER_TASKS_API";
-export const DELETE_TASK_PERM_API = "DELETE_TASK_PERM_API";
-export const DELETE_TASK_TEMP_API = "DELETE_TASK_TEMP_API";
+export * from "./TodoActions";
+export * from "./FilterTasksActions";
+export * from "./SortDateActions";

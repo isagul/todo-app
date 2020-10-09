@@ -10,16 +10,16 @@ import {
   RestOutlined
 } from '@ant-design/icons';
 import { Store } from './store';
-import {
-  ADD_TASK,
-  SORT_BY_DATE,
-  SET_TASKS,
-  UPDATE_STATUS_API,
-  GET_FILTER_TASKS_API,
-  DELETE_TASK_PERM_API,
-  DELETE_TASK_TEMP_API
+import { 
+  addTask, 
+  filterTasks, 
+  sortByDate, 
+  setTasks, 
+  deleteTaskPerm, 
+  deleteTaskTemp,
+  updateStatus 
 } from './actions/index';
-import axios from 'axios';
+import { axiosInstance } from './utils/AxiosConfig';
 import './App.scss';
 
 const dateFormat = require('dateformat');
@@ -31,9 +31,6 @@ const taskStatus = [
   { id: 3, label: 'Completed', key: 'completed', icon: <CheckCircleOutlined /> },
   { id: 4, label: 'Recently Deleted', key: 'deleted', icon: <RestOutlined /> }
 ];
-
-axios.defaults.baseURL = 'https://api-savenote.herokuapp.com';
-// axios.defaults.baseURL = 'http://localhost:3002';
 
 function App() {
   const [taskName, setTaskName] = useState('');  // it holds new task that will be added
@@ -47,14 +44,13 @@ function App() {
 
   useEffect(() => {
     setLoading(true);
-    axios.get('/task')
+    axiosInstance.get('/task')
       .then(function (response) {
         // handle success
         if (response.status === 200) {
-          dispatch({
-            type: SET_TASKS,
-            payload: response.data.result.filter(task => task.status !== 'deleted')
-          })
+          setTasks({
+            data: response.data.result.filter(task => task.status !== 'deleted')
+          }, dispatch)
           setLoading(false);
         }
       })
@@ -77,19 +73,16 @@ function App() {
 
   function onChangeStatus(e, item) {
     setLoading(true);
-    axios.post('/task/update', {
+    axiosInstance.post('/task/update', {
       id: item._id,
       value: e.target.checked ? 'completed' : 'active'
     })
       .then(function (response) {
         if (response.status === 200) {
-          dispatch({
-            type: UPDATE_STATUS_API,
-            payload: {
-              data: response.data.result,
-              currentStatusFilter: currentFilter
-            }
-          });
+          updateStatus({
+            data: response.data.result,
+            currentStatusFilter: currentFilter
+          }, dispatch)
           setLoading(false);
         }
       })
@@ -101,19 +94,16 @@ function App() {
 
   function getStatus(status) {
     setLoading(true);
-    axios.post('/task/by-status', {
+    axiosInstance.post('/task/by-status', {
       status: status.key
     })
       .then(function (response) {
         if (response.status === 200) {
           setCurrentFilter(status.key);
-          dispatch({
-            type: GET_FILTER_TASKS_API,
-            payload: {
-              data: response.data.result,
-              currentStatusFilter: status.key
-            }
-          })
+          filterTasks({
+            data: response.data.result,
+            currentStatusFilter: status.key
+          }, dispatch)
           setLoading(false);
           setCurrentPage(1);
         }
@@ -125,22 +115,20 @@ function App() {
 
   }
 
-  function addTask() {
+  function addTaskTodo() {
     if (taskName && taskName.trim().length > 0) {
       setLoading(true);
-      axios.post('/task/create', {
+      axiosInstance.post('/task/create', {
         content: taskName,
         date: dateFormat(new Date())
       })
         .then(function (response) {
           if (response.status === 200) {
-            dispatch({
-              type: ADD_TASK,
-              payload: {
-                task: response.data.addedTask,
-                currentStatusFilter: currentFilter
-              }
-            });
+            addTask({
+              task: response.data.addedTask,
+              currentStatusFilter: currentFilter
+            }, dispatch)
+
             setTaskName('');
             setLoading(false);
             message.success("The task was added successfully");
@@ -157,16 +145,13 @@ function App() {
 
   function deleteTaskPermanently(item) {
     setLoading(true);
-    axios.delete(`/task/delete-permanently/${item._id}`)
+    axiosInstance.delete(`/task/delete-permanently/${item._id}`)
       .then(function (response) {
         if (response.status === 200) {
-          dispatch({
-            type: DELETE_TASK_PERM_API,
-            payload: {
-              data: response.data.result,
-              currentStatusFilter: currentFilter
-            }
-          });
+          deleteTaskPerm({
+            data: response.data.result,
+            currentStatusFilter: currentFilter
+          }, dispatch)
           setLoading(false);
           if (getCurrentTasks().length === 1) {
             if (currentPage > 1) {
@@ -183,19 +168,16 @@ function App() {
   }
 
   function deleteTaskTemporarily(item) {
-    axios.post('/task/delete-temporarily', {
+    axiosInstance.post('/task/delete-temporarily', {
       id: item._id
     })
       .then(function (response) {
         setLoading(true);
         if (response.status === 200) {
-          dispatch({
-            type: DELETE_TASK_TEMP_API,
-            payload: {
-              data: response.data.result.filter(item => item.status !== 'deleted'),
-              currentStatusFilter: currentFilter
-            }
-          });
+          deleteTaskTemp({
+            data: response.data.result.filter(item => item.status !== 'deleted'),
+            currentStatusFilter: currentFilter
+          }, dispatch)
           setLoading(false);
           if (getCurrentTasks().length === 1) {
             if (currentPage > 1) {
@@ -211,13 +193,10 @@ function App() {
   }
 
   function onChangeSortByDate(value) {
-    dispatch({
-      type: SORT_BY_DATE,
-      payload: {
-        sortValue: value,
-        currentStatusFilter: currentFilter
-      }
-    });
+    sortByDate({
+      sortValue: value,
+      currentStatusFilter: currentFilter
+    }, dispatch)
   }
 
   return (
@@ -246,9 +225,9 @@ function App() {
               size="middle"
               value={taskName}
               onChange={(event) => setTaskName(event.target.value)}
-              onPressEnter={() => addTask()}
+              onPressEnter={() => addTaskTodo()}
             />
-            <Button onClick={() => addTask()}>Add</Button>
+            <Button onClick={() => addTaskTodo()}>Add</Button>
           </div>
 
           <Divider orientation="left">TODOS</Divider>
