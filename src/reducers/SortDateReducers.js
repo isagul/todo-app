@@ -15,6 +15,7 @@ const sortByDate = (state, payload) => {
     });
     return {
         ...state,
+        sortingValue: sortValue,
         filteredTasks: [...updatedTasks]
     }
 }

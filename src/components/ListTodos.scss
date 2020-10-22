@@ -1,0 +1,58 @@
+@import '../constants/colors.scss';
+
+.list-tasks {
+    list-style-type: none;
+    padding-left: 0;
+    margin-bottom: 0;
+
+    .task {
+        display: flex;
+        border-bottom: 1px solid lightgray;
+        padding-bottom: 1rem;
+        margin-top: 1rem;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        .task-name {
+            flex: 2;
+        }
+
+        .remaining-time {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+            color: darkblue;
+
+            >span {
+                margin-bottom: 5px;
+            }
+        }
+
+        .delete-task {
+            cursor: pointer;
+            color: #ff5858;
+            margin-left: 1rem;
+            font-weight: 600;
+            flex: 1;
+
+            .undo {
+                color: rgb(91, 173, 206);
+            }
+        }
+
+        .task-date {
+            flex: 1;
+        }
+    }
+
+    .completed {
+        span {
+            text-decoration-line: line-through;
+            text-decoration-color: $logoColor;
+            color: grey;
+        }
+    }
+}
+
+.left-items-info {
+    margin-top: 10px;
+}

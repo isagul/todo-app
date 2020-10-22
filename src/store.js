@@ -9,7 +9,8 @@ const initialState = {
     recentlyDeleted: [],
     loading: false,
     currentPage: 1,
-    currentFilter: 'all'
+    currentFilter: 'all',
+    sortingValue: 'asc'
 };
 
 export function StoreProvider(props) {
