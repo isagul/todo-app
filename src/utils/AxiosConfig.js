@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-    baseURL: 'https://api-savenote.herokuapp.com'
+    baseURL: 'https://todo-app-backend.fly.dev'
 })
 
 export { axiosInstance };

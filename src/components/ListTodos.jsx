@@ -16,7 +16,7 @@ import './ListTodos.scss';
 
 const ListTodos = () => {
   const { state, dispatch } = useContext(Store);
-  const { filteredTasks, loading, currentPage, currentFilter, sortingValue } = state;
+  const { filteredTasks, loading, currentPage, currentFilter } = state;
   const linksPerPage = 5;
 
   function getCurrentTasks() {
